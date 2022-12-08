@@ -77,8 +77,7 @@ int getRightTick()
   return countRight;
 }
 
-int last_millis; // Number of tasks
-// bool ZF_value = false;
+int last_millis[2]; // Number of tasks
 
 void motor_setup()
 {
@@ -277,20 +276,20 @@ void ros_init()
 
 void task2()
 {
-  if (millis() - last_millis > 100)
+  if (millis() - last_millis[0] > 100)
   {
-    last_millis = millis();
+    last_millis[0] = millis();
     motor_run();
-    publishSpeed();
   }
 }
 
-// void task3(){
-//   if(millis() - last_millis[2] > 10){
-//     last_millis[2] = millis();
-//     update_debug();
-//   }
-// }
+void task3(){
+  if(millis() - last_millis[1] > 10){
+    last_millis[1] = millis();
+    // update_debug();
+    publishSpeed();
+  }
+}
 
 void setup()
 {
@@ -307,5 +306,5 @@ void loop()
   // put your main code here, to run repeatedly:
   // task1();
   task2();
-  // task3();
+  task3();
 }
