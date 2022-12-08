@@ -5,7 +5,7 @@ ros::NodeHandle nh;
 // std_msgs::Header debug_header;
 // rovit_navsys::debug debug_message;
 
-//Debug variables
+// Debug variables
 char noVelDataCount = 0;
 short cmdVelNoDataMillis;
 short cmdVelLastMillis;
@@ -18,7 +18,7 @@ const float PID_Left_Param[3] = {0.3055939155039545, 9.86003191826279, 0.0};
 const float PID_Right_Param[3] = {0.5240459349708211, 9.21523683674757, 0.0};
 
 double leftPIDOut, rightPIDOut, leftSpeed, rightSpeed, leftSetpoint, rightSetpoint;
-// float debug_array[7];
+float speed_array[3];
 // float tempLSpeed, tempRSpeed;
 
 PID PIDLeftMotor(&leftSpeed, &leftPIDOut, &leftSetpoint, PID_Left_Param[0], PID_Left_Param[1], PID_Left_Param[2], DIRECT);
@@ -36,6 +36,9 @@ ros::Subscriber<geometry_msgs::Twist> cmdVel("cmd_vel", cmdVelCb);
 
 // ros::Publisher imu_pub("imu/data_raw", &imu_msg);
 // ros::Publisher debug_pub("debug/data", &debug_message);
+
+geometry_msgs::Vector3Stamped speed_msg;       // create a "speed_msg" ROS message
+ros::Publisher speed_pub("speed", &speed_msg); // create a publisher to ROS topic "speed" using the "speed_msg" type
 
 int countLeft = 0;
 int countRight = 0;
@@ -73,12 +76,6 @@ int getRightTick()
 {
   return countRight;
 }
-
-// std_msgs::Int16 getRightTick;
-// ros::Publisher rightPub("right_ticks", &getRightTick);
- 
-// std_msgs::Int16 getLeftTick;
-// ros::Publisher leftPub("left_ticks", &getLeftTick);
 
 int last_millis; // Number of tasks
 // bool ZF_value = false;
@@ -249,17 +246,26 @@ float SpeedtoPWM(float speed, int motor, float correction)
   return PWM;
 }
 
+void publishSpeed()
+{
+  measureSpeed();
+  speed_msg.header.stamp = nh.now(); // timestamp for odometry data
+  speed_msg.vector.x = leftSpeed;    // left wheel speed (in m/s)
+  speed_msg.vector.y = rightSpeed;   // right wheel speed (in m/s)
+  // speed_msg.vector.z = time/1000;  // looptime, should be the same as specified in LOOPTIME (in s)
+  speed_pub.publish(&speed_msg);
+  nh.spinOnce();
+}
+
 void ros_init()
 {
   nh.getHardware()->setBaud(57600);
   nh.initNode();
   // nh.advertise(imu_pub);
   // nh.advertise(debug_pub);
-  // nh.advertise(debug_stamp);
-  // nh.advertise(rightPub);
-  // nh.advertise(leftPub);
+  nh.advertise(speed_pub);
   nh.subscribe(cmdVel);
-    // nh.subscribe(calib_f);
+  // nh.subscribe(calib_f);
 }
 
 // void task1(){
@@ -269,8 +275,10 @@ void ros_init()
 //   }
 // }
 
-void task2(){
-  if(millis() - last_millis > 100){
+void task2()
+{
+  if (millis() - last_millis > 100)
+  {
     last_millis = millis();
     motor_run();
     // leftPub.publish( &getLeftTick );
@@ -285,7 +293,8 @@ void task2(){
 //   }
 // }
 
-void setup() {
+void setup()
+{
   // put your setup code here, to run once:
   ros_init();
   // imu_setup();
@@ -294,10 +303,10 @@ void setup() {
   btStop();
 }
 
-void loop() {
+void loop()
+{
   // put your main code here, to run repeatedly:
   // task1();
   task2();
   // task3();
-  
 }
