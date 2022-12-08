@@ -281,8 +281,7 @@ void task2()
   {
     last_millis = millis();
     motor_run();
-    // leftPub.publish( &getLeftTick );
-    // rightPub.publish( &getRightTick );
+    publishSpeed();
   }
 }
 
