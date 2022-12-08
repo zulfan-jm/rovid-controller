@@ -1,17 +1,48 @@
 #include "include.h"
 
 ros::NodeHandle nh;
-rospy_tutorials::Floats debug_msg;
-std_msgs::Header debug_header;
+// rospy_tutorials::Floats debug_msg;
+// std_msgs::Header debug_header;
 // rovit_navsys::debug debug_message;
 
+//Debug variables
+char noVelDataCount = 0;
+short cmdVelNoDataMillis;
+short cmdVelLastMillis;
+short cmdVelTimeout = 0;
+bool timeout;
+
+// PID Setting Variables
+const float PID_Left_Param[3] = {0.3055939155039545, 9.86003191826279, 0.0};
+// opsi lain gain 0.22459699617741438, 7.246654591938676 adjust here https://pidtuner.com/#/DxuRkeRLrY
+const float PID_Right_Param[3] = {0.5240459349708211, 9.21523683674757, 0.0};
+
+double leftPIDOut, rightPIDOut, leftSpeed, rightSpeed, leftSetpoint, rightSetpoint;
+// float debug_array[7];
+float tempLSpeed, tempRSpeed;
+
+PID PIDLeftMotor(&leftSpeed, &leftPIDOut, &leftSetpoint, PID_Left_Param[0], PID_Left_Param[1], PID_Left_Param[2], DIRECT);
+PID PIDRightMotor(&rightSpeed, &rightPIDOut, &rightSetpoint, PID_Right_Param[0], PID_Right_Param[1], PID_Right_Param[2], DIRECT);
+
+// void calibCb(const std_msgs::Empty& cal_mode);
+void cmdVelCb(const geometry_msgs::Twist &cmd_vel);
+// void imu_calibration_routine();
+void measureSpeed();
+// float SpeedtoPWM(float speed, int motor);
+float SpeedtoPWM(float speed, int motor, float correction);
+
+ros::Subscriber<geometry_msgs::Twist> cmdVel("cmd_vel", cmdVelCb);
+// ros::Subscriber <std_msgs::Empty> calib_f("imu/calibration", calibCb);
+
+// ros::Publisher imu_pub("imu/data_raw", &imu_msg);
+// ros::Publisher debug_pub("debug/data", &debug_message);
 
 int countLeft = 0;
 int countRight = 0;
 
 void left_wheel_tick()
 {
-  if (digitalRead(ZF_left) == 1)
+  if (digitalRead(MOTOR_PINS[1]) == 1)
   {
     countLeft++;
   }
@@ -23,7 +54,7 @@ void left_wheel_tick()
 
 void right_wheel_tick()
 {
-  if (digitalRead(ZF_right) == 0)
+  if (digitalRead(MOTOR_PINS[4]) == 0)
   {
     countRight++;
   }
@@ -59,34 +90,13 @@ void motor_setup()
   attachInterrupt(digitalPinToInterrupt(ENCODER_PINS[0]), left_wheel_tick, RISING);
   attachInterrupt(digitalPinToInterrupt(ENCODER_PINS[1]), right_wheel_tick, RISING);
 
-  Serial.begin(9600);
-
+  PIDLeftMotor.SetMode(AUTOMATIC);
+  PIDRightMotor.SetMode(AUTOMATIC);
+  PIDLeftMotor.SetSampleTime(95);
+  PIDRightMotor.SetSampleTime(95);
+  PIDLeftMotor.SetOutputLimits(-0.7, 0.7);
+  PIDRightMotor.SetOutputLimits(-0.7, 0.7);
 }
-
-// PID Setting Variables
-const float PID_Left_Param[3] = {0.3055939155039545, 9.86003191826279, 0.0};
-// opsi lain gain 0.22459699617741438, 7.246654591938676 adjust here https://pidtuner.com/#/DxuRkeRLrY
-const float PID_Right_Param[3] = {0.5240459349708211, 9.21523683674757, 0.0};
-
-double leftPIDOut, rightPIDOut, leftSpeed, rightSpeed, leftSetpoint, rightSetpoint;
-// float debug_array[7];
-float tempLSpeed, tempRSpeed;
-
-PID PIDLeftMotor(&leftSpeed, &leftPIDOut, &leftSetpoint, PID_Left_Param[0], PID_Left_Param[1], PID_Left_Param[2], DIRECT);
-PID PIDRightMotor(&rightSpeed, &rightPIDOut, &rightSetpoint, PID_Right_Param[0], PID_Right_Param[1], PID_Right_Param[2], DIRECT);
-
-// void calibCb(const std_msgs::Empty& cal_mode);
-void cmdVelCb(const geometry_msgs::Twist &cmd_vel);
-// void imu_calibration_routine();
-void measureSpeed();
-// float SpeedtoPWM(float speed, int motor);
-float SpeedtoPWM(float speed, int motor, float correction);
-
-ros::Subscriber<geometry_msgs::Twist> cmdVel("cmd_vel", cmdVelCb);
-// ros::Subscriber <std_msgs::Empty> calib_f("imu/calibration", calibCb);
-
-// ros::Publisher imu_pub("imu/data_raw", &imu_msg);
-// ros::Publisher debug_pub("debug/data", &debug_message);
 
 float calculateSpeed(long count, long time)
 {
@@ -121,8 +131,8 @@ void cmdVelCb(const geometry_msgs::Twist &cmd_vel)
 
 void measureSpeed()
 {
-  leftSpeed = calculateSpeed(left_encoder.getLeftTick(), 10);
-  rightSpeed = calculateSpeed(right_encoder.getRightTick(), 10);
+  leftSpeed = calculateSpeed(getLeftTick(), 10);
+  rightSpeed = calculateSpeed(getRightTick(), 10);
 }
 
 void setMotorPWM(short PWM, bool left)
@@ -252,8 +262,8 @@ void ros_init()
 // }
 
 void task2(){
-  if(millis() - last_millis[1] > 100){
-    last_millis[1] = millis();
+  if(millis() - last_millis > 100){
+    last_millis = millis();
     motor_run();
   }
 }

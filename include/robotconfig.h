@@ -7,5 +7,5 @@ const float encoder_cpr = 46; //Encoder ticks or counts per rotation
 const float speed_to_pwm_ratio = 0.0123677; //Ratio to convert speed (in m/s) to PWM value. 
 //It was obtained by plotting the wheel speed in relation to the PWM motor command (the value is the slope of the linear function).
 
-const float wheel_ratio = 0.075; //GearBox Ratio
+const float wheel_gear_ratio = 0.075; //GearBox Ratio
 const float max_speed = 0.4;
