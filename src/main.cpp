@@ -19,7 +19,7 @@ const float PID_Right_Param[3] = {0.5240459349708211, 9.21523683674757, 0.0};
 
 double leftPIDOut, rightPIDOut, leftSpeed, rightSpeed, leftSetpoint, rightSetpoint;
 // float debug_array[7];
-float tempLSpeed, tempRSpeed;
+// float tempLSpeed, tempRSpeed;
 
 PID PIDLeftMotor(&leftSpeed, &leftPIDOut, &leftSetpoint, PID_Left_Param[0], PID_Left_Param[1], PID_Left_Param[2], DIRECT);
 PID PIDRightMotor(&rightSpeed, &rightPIDOut, &rightSetpoint, PID_Right_Param[0], PID_Right_Param[1], PID_Right_Param[2], DIRECT);
@@ -73,6 +73,12 @@ int getRightTick()
 {
   return countRight;
 }
+
+// std_msgs::Int16 getRightTick;
+// ros::Publisher rightPub("right_ticks", &getRightTick);
+ 
+// std_msgs::Int16 getLeftTick;
+// ros::Publisher leftPub("left_ticks", &getLeftTick);
 
 int last_millis; // Number of tasks
 // bool ZF_value = false;
@@ -245,11 +251,13 @@ float SpeedtoPWM(float speed, int motor, float correction)
 
 void ros_init()
 {
-  nh.getHardware()->setBaud(576000);
+  nh.getHardware()->setBaud(57600);
   nh.initNode();
   // nh.advertise(imu_pub);
   // nh.advertise(debug_pub);
   // nh.advertise(debug_stamp);
+  // nh.advertise(rightPub);
+  // nh.advertise(leftPub);
   nh.subscribe(cmdVel);
     // nh.subscribe(calib_f);
 }
@@ -265,6 +273,8 @@ void task2(){
   if(millis() - last_millis > 100){
     last_millis = millis();
     motor_run();
+    // leftPub.publish( &getLeftTick );
+    // rightPub.publish( &getRightTick );
   }
 }
 
