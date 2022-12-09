@@ -1,6 +1,6 @@
 #include "include.h"
 
-#define LOOPTIME  100
+#define LOOPTIME 100
 
 ros::NodeHandle nh;
 // rospy_tutorials::Floats debug_msg;
@@ -253,7 +253,7 @@ void publishSpeed(double time)
   speed_msg.header.stamp = nh.now(); // timestamp for odometry data
   speed_msg.vector.x = leftSpeed;    // left wheel speed (in m/s)
   speed_msg.vector.y = rightSpeed;   // right wheel speed (in m/s)
-  speed_msg.vector.z = time/1000;  // looptime, should be the same as specified in LOOPTIME (in s)
+  speed_msg.vector.z = time / 1000;  // looptime, should be the same as specified in LOOPTIME (in s)
   speed_pub.publish(&speed_msg);
   nh.spinOnce();
 }
@@ -285,8 +285,10 @@ void task2()
   }
 }
 
-void task3(){
-  if(millis() - last_millis[1] > 10){
+void task3()
+{
+  if (millis() - last_millis[1] > 10)
+  {
     last_millis[1] = millis();
     // update_debug();
     publishSpeed(LOOPTIME);
