@@ -219,20 +219,6 @@ void motor_run()
   }
 }
 
-// float SpeedtoPWM(float speed, int motor)
-// {
-//   float PWM;
-//   if (speed > 0)
-//   {
-//     PWM = (speed + min_speed[motor]) / speed_to_pwm[motor];
-//   }
-//   else
-//   {
-//     PWM = (speed - min_speed[motor + 2]) / speed_to_pwm[motor + 2];
-//   }
-//   return PWM;
-// }
-
 float SpeedtoPWM(float speed, int motor, float correction)
 {
   int PWM;
@@ -287,7 +273,7 @@ void task2()
 
 void task3()
 {
-  if (millis() - last_millis[1] > 10)
+  if (millis() - last_millis[1] >= LOOPTIME)
   {
     last_millis[1] = millis();
     // update_debug();
@@ -297,7 +283,6 @@ void task3()
 
 void setup()
 {
-  // put your setup code here, to run once:
   ros_init();
   // imu_setup();
   motor_setup();
@@ -307,7 +292,6 @@ void setup()
 
 void loop()
 {
-  // put your main code here, to run repeatedly:
   // task1();
   task2();
   task3();
